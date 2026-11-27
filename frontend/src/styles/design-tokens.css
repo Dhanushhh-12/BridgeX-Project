@@ -1,0 +1,111 @@
+/*
+ * AI Bridge X – Step 14.3 Editorial Design System Tokens
+ * Exact Color Ratio Target: 65% Warm Ivory, 25% Deep Editorial Blue, 10% Coral Orange
+ */
+
+:root {
+  /* --------------------------------------------------------------------------
+   * 1. EXACT COLOR PALETTE
+   * -------------------------------------------------------------------------- */
+  --bx-ivory: #F5F0E6;      /* Primary background canvas (65%) */
+  --bx-blue: #183153;       /* Navigation, headings, primary headers (25%) */
+  --bx-coral: #F0785F;      /* Primary action buttons & critical focus (10%) */
+  --bx-coral-hover: #E5664C;/* Subtle hover state strictly within coral hue */
+  --bx-blue-hover: #122642; /* Subtle hover state for Deep Blue surfaces */
+
+  --bx-sand: #E8DFD0;       /* Secondary surfaces, table headers, subtle bands */
+  --bx-charcoal: #292D32;   /* Primary body typography & high-contrast ink */
+  --bx-sage: #8B9B91;       /* Secondary indicators, muted axis strokes, tracks */
+  --bx-white: #FFFFFF;      /* Primary elevated content surfaces */
+  --bx-border: #DED7CB;     /* Crisp hairline structural borders */
+
+  /* Accessible semantic mappings grounded in the exact palette */
+  --bx-status-success-bg: #E8DFD0;
+  --bx-status-success-text: #183153;
+  --bx-status-success-dot: #8B9B91;
+  --bx-status-alert-bg: #F5F0E6;
+  --bx-status-alert-border: #F0785F;
+  --bx-status-alert-text: #183153;
+
+  /* --------------------------------------------------------------------------
+   * 2. TYPOGRAPHY SCALE (Free local system font stack for instant rendering)
+   * -------------------------------------------------------------------------- */
+  --bx-font-sans: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --bx-font-mono: ui-monospace, "Cascadia Code", Consolas, "Liberation Mono", monospace;
+
+  --bx-text-page: 1.75rem;      /* 28px */
+  --bx-lh-page: 1.2;
+  --bx-text-section: 1.25rem;   /* 20px */
+  --bx-lh-section: 1.3;
+  --bx-text-card: 1rem;         /* 16px */
+  --bx-lh-card: 1.35;
+  --bx-text-body: 0.9375rem;    /* 15px */
+  --bx-lh-body: 1.55;
+  --bx-text-label: 0.75rem;     /* 12px */
+  --bx-lh-label: 1.4;
+
+  /* --------------------------------------------------------------------------
+   * 3. SPACING & LAYOUT WIDTHS
+   * -------------------------------------------------------------------------- */
+  --bx-space-1: 0.25rem;  /* 4px */
+  --bx-space-2: 0.5rem;   /* 8px */
+  --bx-space-3: 0.75rem;  /* 12px */
+  --bx-space-4: 1rem;     /* 16px */
+  --bx-space-6: 1.5rem;   /* 24px */
+  --bx-space-8: 2rem;     /* 32px */
+  --bx-space-12: 3rem;    /* 48px */
+
+  --bx-sidebar-width: 16rem;           /* 256px expanded */
+  --bx-sidebar-collapsed: 4.5rem;      /* 72px collapsed */
+  --bx-topbar-height: 4rem;            /* 64px */
+  --bx-container-max: 82.5rem;         /* 1320px */
+
+  /* --------------------------------------------------------------------------
+   * 4. BORDERS, MINIMAL RADIUS & EDITORIAL SHADOWS
+   * -------------------------------------------------------------------------- */
+  --bx-radius-none: 0px;
+  --bx-radius-xs: 2px;
+  --bx-radius-sm: 4px;
+  --bx-radius-md: 6px;
+
+  --bx-border-width: 1px;
+  --bx-border-hairline: 1px solid #DED7CB;
+  --bx-focus-ring: 0 0 0 2px #F5F0E6, 0 0 0 4px #183153;
+
+  --bx-shadow-none: none;
+  --bx-shadow-subtle: 0 1px 2px rgba(24, 49, 83, 0.05);
+  --bx-shadow-overlay: 0 8px 24px rgba(24, 49, 83, 0.12);
+
+  /* --------------------------------------------------------------------------
+   * 5. MOTION & RESPONSIVE BREAKPOINTS (Reference Tokens)
+   * Breakpoints: sm=640px (mobile), md=768px (tablet), lg=1024px (laptop), xl=1280px (desktop)
+   * -------------------------------------------------------------------------- */
+  --bx-transition-fast: 140ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --bx-bp-sm: 640px;
+  --bx-bp-md: 768px;
+  --bx-bp-lg: 1024px;
+  --bx-bp-xl: 1280px;
+}
+
+@theme {
+  /* Colors mapped cleanly to Tailwind utility classes */
+  --color-ivory: #F5F0E6;
+  --color-editorial-blue: #183153;
+  --color-editorial-blue-hover: #122642;
+  --color-coral: #F0785F;
+  --color-coral-hover: #E5664C;
+  --color-sand: #E8DFD0;
+  --color-charcoal: #292D32;
+  --color-sage: #8B9B91;
+  --color-surface: #FFFFFF;
+  --color-border-neutral: #DED7CB;
+
+  /* Typography */
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, "Liberation Mono", monospace;
+
+  /* Crisp Editorial Radii (No bloated pill cards) */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+}

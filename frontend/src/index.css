@@ -1,0 +1,90 @@
+@import "tailwindcss";
+@import "./styles/design-tokens.css";
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--bx-ivory);
+    color: var(--bx-charcoal);
+    font-family: var(--bx-font-sans);
+    font-size: var(--bx-text-body);
+    line-height: var(--bx-lh-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--bx-blue);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--bx-blue);
+    outline-offset: 2px;
+  }
+}
+
+/* Editorial typography classes for consistent visual hierarchy */
+.bx-heading-page {
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  line-height: var(--bx-lh-page);
+  font-weight: 600;
+  color: var(--bx-blue);
+  letter-spacing: -0.025em;
+}
+
+.bx-heading-section {
+  font-size: var(--bx-text-section);
+  line-height: var(--bx-lh-section);
+  font-weight: 600;
+  color: var(--bx-blue);
+  letter-spacing: -0.015em;
+}
+
+.bx-heading-card {
+  font-size: var(--bx-text-card);
+  line-height: var(--bx-lh-card);
+  font-weight: 600;
+  color: var(--bx-blue);
+}
+
+.bx-body {
+  font-size: var(--bx-text-body);
+  line-height: var(--bx-lh-body);
+  font-weight: 400;
+  color: var(--bx-charcoal);
+}
+
+.bx-label {
+  font-size: var(--bx-text-label);
+  line-height: var(--bx-lh-label);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bx-blue);
+}
+
+.bx-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
