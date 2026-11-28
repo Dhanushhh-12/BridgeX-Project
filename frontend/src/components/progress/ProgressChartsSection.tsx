@@ -65,16 +65,17 @@ export function ProgressChartsSection({ tasks }: ProgressChartsSectionProps) {
                 description="Reset project, status, or category filters to render task progress bars."
               />
             ) : (
-              <div className="h-[270px] w-full" aria-label="Planned versus actual task progress chart">
+              <div className="h-[240px] w-full min-w-0 sm:h-[270px]" aria-label="Planned versus actual task progress chart">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={taskComparisonData}
-                    margin={{ top: 10, right: 12, left: -16, bottom: 8 }}
+                    margin={{ top: 10, right: 10, left: -18, bottom: 8 }}
                     barGap={4}
                   >
                     <CartesianGrid stroke="#DED7CB" strokeDasharray="3 3" vertical={false} />
                     <XAxis
                       dataKey="name"
+                      minTickGap={14}
                       tick={{ fill: '#292D32', fontSize: 11 }}
                       axisLine={{ stroke: '#DED7CB' }}
                       tickLine={false}

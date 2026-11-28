@@ -1,16 +1,18 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Loader2 } from 'lucide-react'
+import { motion, type HTMLMotionProps } from 'motion/react'
 import { cn } from '../../lib/cn'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   variant?: ButtonVariant
   size?: ButtonSize
   isLoading?: boolean
   leftIcon?: ReactNode
   rightIcon?: ReactNode
+  children?: ReactNode
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
@@ -48,10 +50,12 @@ export function Button({
   const isDisabled = Boolean(disabled || isLoading)
 
   return (
-    <button
+    <motion.button
       type={type}
       disabled={isDisabled}
       aria-busy={isLoading || undefined}
+      whileTap={isDisabled ? undefined : { scale: 0.98 }}
+      transition={{ duration: 0.1 }}
       className={cn(
         'inline-flex items-center justify-center rounded-sm transition-colors duration-150 select-none',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-editorial-blue',
@@ -73,6 +77,6 @@ export function Button({
           {rightIcon}
         </span>
       )}
-    </button>
+    </motion.button>
   )
 }

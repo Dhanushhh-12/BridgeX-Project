@@ -43,24 +43,26 @@ export function ConstructionProgressChart({ projects }: ConstructionProgressChar
             description="Reset project or status filters to view planned vs. actual progress bars."
           />
         ) : (
-          <div className="h-[290px] w-full" aria-label="Planned versus actual construction progress bar chart">
+          <div className="h-[245px] w-full min-w-0 sm:h-[290px]" aria-label="Planned versus actual construction progress bar chart">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
-                margin={{ top: 12, right: 16, left: -12, bottom: 16 }}
+                margin={{ top: 12, right: 10, left: -16, bottom: 16 }}
                 barGap={6}
               >
                 <CartesianGrid stroke="#DED7CB" strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="name"
-                  tick={{ fill: '#292D32', fontSize: 12 }}
+                  minTickGap={16}
+                  tickFormatter={(val) => String(val).slice(0, 12)}
+                  tick={{ fill: '#292D32', fontSize: 11 }}
                   axisLine={{ stroke: '#DED7CB' }}
                   tickLine={false}
                 />
                 <YAxis
                   domain={[0, 100]}
                   unit="%"
-                  tick={{ fill: '#292D32', fontSize: 12 }}
+                  tick={{ fill: '#292D32', fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -74,7 +76,7 @@ export function ConstructionProgressChart({ projects }: ConstructionProgressChar
                     color: '#292D32',
                   }}
                 />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }} />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} />
                 <Bar
                   dataKey="Planned"
                   name="Planned Progress (%)"

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Bot, Check, Copy, User } from 'lucide-react'
+import { motion } from 'motion/react'
 import { cn } from '../../lib/cn'
+import { BX_OVERLAY_TRANSITION } from '../../lib/motion'
 
 export interface ChatMessage {
   id: string
@@ -28,7 +30,10 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
   }
 
   return (
-    <article
+    <motion.article
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={BX_OVERLAY_TRANSITION}
       aria-label={`${isUser ? 'User' : 'Assistant'} message at ${message.timestamp}`}
       className={cn('flex gap-3', isUser ? 'justify-end' : 'justify-start')}
     >
@@ -103,6 +108,6 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
           <User className="h-4 w-4 text-coral" />
         </div>
       )}
-    </article>
+    </motion.article>
   )
 }

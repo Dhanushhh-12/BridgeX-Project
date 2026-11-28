@@ -1,11 +1,15 @@
-import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { cloneElement, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useLocation, useOutlet } from 'react-router-dom'
+import { BX_PAGE_TRANSITION } from '../../lib/motion'
 import { Sidebar } from './Sidebar'
 import { TopHeader } from './TopHeader'
 
 export function AppShell() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const location = useLocation()
+  const currentOutlet = useOutlet()
 
   return (
     <div className="flex min-h-screen bg-ivory text-charcoal">
@@ -33,10 +37,20 @@ export function AppShell() {
         <main
           id="main-content"
           tabIndex={-1}
-          className="flex-1 px-4 py-6 sm:px-6 lg:px-8 focus:outline-none"
+          className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-6 lg:px-8 focus:outline-none"
         >
-          <div className="mx-auto max-w-[1320px]">
-            <Outlet />
+          <div className="mx-auto w-full min-w-0 max-w-[1320px]">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={BX_PAGE_TRANSITION}
+              >
+                {currentOutlet ? cloneElement(currentOutlet, { key: location.pathname }) : null}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
       </div>

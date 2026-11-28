@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -9,6 +8,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../components/layout'
+import { ManagedProjectsPanel } from '../components/projects/ManagedProjectsPanel'
 import {
   Badge,
   Button,
@@ -543,19 +543,8 @@ export function ProjectsPage() {
         </CardFooter>
       </Card>
 
-      {/* Missing Backend Schema Summary */}
-      <Card variant="ivory" padding="sm">
-        <div className="flex items-start gap-2.5 text-xs text-charcoal">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-coral" aria-hidden="true" />
-          <p>
-            <strong className="text-editorial-blue">Missing Backend Requirements for Full CRUD:</strong>{' '}
-            A relational table (SQLite/PostgreSQL <code>projects</code>) and FastAPI routes{' '}
-            <code>GET /api/v1/projects</code>, <code>POST /api/v1/projects</code>, and{' '}
-            <code>PATCH /api/v1/projects/{'{id}'}</code> are required before project creation and
-            editing can persist safely.
-          </p>
-        </div>
-      </Card>
+      {/* Role-Protected SQLite Backend Projects Panel */}
+      <ManagedProjectsPanel />
     </div>
   )
 }

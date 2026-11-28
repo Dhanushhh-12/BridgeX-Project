@@ -67,7 +67,7 @@ export function Table<T>({
   return (
     <div
       className={cn(
-        'w-full overflow-x-auto rounded-sm border border-border-neutral bg-surface',
+        'w-full max-w-full overflow-x-auto overscroll-x-contain rounded-sm border border-border-neutral bg-surface',
         className,
       )}
     >
@@ -93,7 +93,7 @@ export function Table<T>({
                       : undefined
                   }
                   className={cn(
-                    'px-4 py-3 text-xs font-semibold uppercase tracking-wider whitespace-nowrap',
+                    'px-3 py-2.5 text-xs font-semibold uppercase tracking-wider whitespace-nowrap sm:px-4 sm:py-3',
                     alignClass,
                     col.widthClass,
                   )}
@@ -137,7 +137,7 @@ export function Table<T>({
                 <td
                   key={col.key}
                   className={cn(
-                    'px-4 py-3 align-middle text-sm text-charcoal',
+                    'px-3 py-2.5 align-middle text-xs sm:px-4 sm:py-3 sm:text-sm text-charcoal',
                     ALIGN_CLASSES[col.align ?? 'left'],
                   )}
                 >

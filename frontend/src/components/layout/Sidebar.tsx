@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { NavLink } from 'react-router-dom'
 import { NAV_ITEMS, type NavItemConfig } from '../../config/navigation'
+import { useAuth } from '../../context/useAuth'
 import { cn } from '../../lib/cn'
+import { BX_EASE, BX_OVERLAY_TRANSITION } from '../../lib/motion'
 import { Tooltip } from '../ui'
 import { BrandLogo } from './BrandLogo'
 
@@ -25,8 +28,13 @@ export function Sidebar({
   isMobileOpen,
   onCloseMobile,
 }: SidebarProps) {
+  const { user } = useAuth()
+
   useEffect(() => {
     if (!isMobileOpen) return
+
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -35,7 +43,10 @@ export function Sidebar({
     }
 
     document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = prevOverflow
+    }
   }, [isMobileOpen, onCloseMobile])
 
   function renderNavContent(mobileMode: boolean) {
@@ -77,7 +88,12 @@ export function Sidebar({
           className="flex-1 space-y-5 overflow-y-auto px-2.5 py-4"
         >
           {GROUPS.map((group) => {
-            const items = NAV_ITEMS.filter((item) => item.sectionGroup === group)
+            const items = NAV_ITEMS.filter(
+              (item) =>
+                item.sectionGroup === group &&
+                (!item.allowedRoles || (user && item.allowedRoles.includes(user.role))),
+            )
+            if (items.length === 0) return null
             return (
               <div key={group} className="space-y-1">
                 {!collapsedView && (
@@ -112,14 +128,18 @@ export function Sidebar({
                         {({ isActive }) => (
                           <>
                             {isActive && (
-                              <span
+                              <motion.span
+                                layoutId={
+                                  mobileMode ? 'bx-sidebar-active-mobile' : 'bx-sidebar-active-desktop'
+                                }
+                                transition={{ duration: 0.22, ease: BX_EASE }}
                                 className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-xs bg-coral"
                                 aria-hidden="true"
                               />
                             )}
                             <Icon
                               className={cn(
-                                'h-4 w-4 shrink-0',
+                                'h-4 w-4 shrink-0 transition-transform duration-150 group-hover:scale-105',
                                 isActive ? 'text-coral' : 'text-sand/80 group-hover:text-surface',
                               )}
                               aria-hidden="true"
@@ -183,33 +203,47 @@ export function Sidebar({
   return (
     <>
       {/* Desktop Rail */}
-      <aside
-        className={cn(
-          'hidden lg:block shrink-0 border-r border-editorial-blue transition-[width] duration-150 ease-out',
-          isCollapsed ? 'w-[72px]' : 'w-64',
-        )}
+      <motion.aside
+        initial={false}
+        animate={{ width: isCollapsed ? 72 : 256 }}
+        transition={{ duration: 0.2, ease: BX_EASE }}
+        className="hidden lg:block shrink-0 border-r border-editorial-blue overflow-x-hidden"
       >
         <div className="sticky top-0 h-screen">{renderNavContent(false)}</div>
-      </aside>
+      </motion.aside>
 
       {/* Mobile Slide-Over Drawer */}
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 z-50 flex lg:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Mobile navigation drawer"
-        >
+      <AnimatePresence>
+        {isMobileOpen && (
           <div
-            className="fixed inset-0 bg-editorial-blue/50"
-            onClick={onCloseMobile}
-            aria-hidden="true"
-          />
-          <aside className="relative z-10 h-full w-72 max-w-[85vw] border-r border-editorial-blue">
-            {renderNavContent(true)}
-          </aside>
-        </div>
-      )}
+            className="fixed inset-0 z-50 flex lg:hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation drawer"
+          >
+            <motion.div
+              key="mobile-drawer-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={BX_OVERLAY_TRANSITION}
+              className="fixed inset-0 bg-editorial-blue/50"
+              onClick={onCloseMobile}
+              aria-hidden="true"
+            />
+            <motion.aside
+              key="mobile-drawer-panel"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ duration: 0.22, ease: BX_EASE }}
+              className="relative z-10 h-full w-72 max-w-[85vw] border-r border-editorial-blue"
+            >
+              {renderNavContent(true)}
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

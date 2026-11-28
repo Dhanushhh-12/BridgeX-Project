@@ -84,7 +84,7 @@ export function WeatherChartsGrid({
               />
             ) : (
               <div className="space-y-3">
-                <div className="h-[270px] w-full" aria-label="Daily rainfall forecast bar chart">
+                <div className="h-[235px] w-full min-w-0 sm:h-[270px]" aria-label="Daily rainfall forecast bar chart">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       data={weather.daily_forecast.map((d) => ({
@@ -93,11 +93,12 @@ export function WeatherChartsGrid({
                         rainfall: d.rainfall_mm,
                         isRainy: d.is_rainy,
                       }))}
-                      margin={{ top: 14, right: 16, left: -12, bottom: 4 }}
+                      margin={{ top: 14, right: 10, left: -16, bottom: 4 }}
                     >
                       <CartesianGrid stroke="#DED7CB" strokeDasharray="3 3" vertical={false} />
                       <XAxis
                         dataKey="date"
+                        minTickGap={14}
                         tick={{ fill: '#292D32', fontSize: 11 }}
                         axisLine={{ stroke: '#DED7CB' }}
                         tickLine={false}

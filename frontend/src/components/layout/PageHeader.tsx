@@ -31,14 +31,16 @@ export function PageHeader({
           <Breadcrumbs items={breadcrumbs} className="mb-1" />
         )}
         {eyebrow && <p className="bx-label">{eyebrow}</p>}
-        <h1 className="bx-heading-page truncate">{title}</h1>
+        <h1 className="bx-heading-page break-words leading-tight">{title}</h1>
         {description && (
           <p className="bx-body max-w-3xl text-charcoal/85">{description}</p>
         )}
       </div>
 
       {actions && (
-        <div className="flex shrink-0 flex-wrap items-center gap-2.5">{actions}</div>
+        <div className="flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:gap-2.5">
+          {actions}
+        </div>
       )}
     </div>
   )

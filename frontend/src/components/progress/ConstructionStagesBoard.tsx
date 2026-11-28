@@ -1,4 +1,7 @@
+import { useEffect, useRef } from 'react'
+import gsap from 'gsap'
 import { CSV_STAGE_BENCHMARKS, type ConstructionStageName, type DemoTaskProgressRecord } from '../../data/demoProgressData'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
 import { cn } from '../../lib/cn'
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui'
 
@@ -13,6 +16,33 @@ export function ConstructionStagesBoard({
   selectedStage,
   onSelectStage,
 }: ConstructionStagesBoardProps) {
+  const boardRef = useRef<HTMLDivElement | null>(null)
+  const reducedMotion = useReducedMotion()
+
+  useEffect(() => {
+    const el = boardRef.current
+    if (!el || reducedMotion) return
+    const bars = el.querySelectorAll('.bx-stage-progress-fill')
+    if (bars.length === 0) return
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        bars,
+        { scaleX: 0 },
+        {
+          scaleX: 1,
+          duration: 0.45,
+          stagger: 0.04,
+          ease: 'power2.out',
+          transformOrigin: 'left center',
+          clearProps: 'transform',
+        },
+      )
+    }, el)
+
+    return () => ctx.revert()
+  }, [reducedMotion, tasks.length])
+
   return (
     <Card>
       <CardHeader>
@@ -30,7 +60,7 @@ export function ConstructionStagesBoard({
       </CardHeader>
 
       <CardContent>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div ref={boardRef} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {CSV_STAGE_BENCHMARKS.map((benchmark) => {
             const stageTasks = tasks.filter(
               (t) => t.category === (benchmark.stage as ConstructionStageName),
@@ -77,7 +107,10 @@ export function ConstructionStagesBoard({
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-xs bg-sand" aria-hidden="true">
                     <div
-                      className={hasDelayed ? 'h-full bg-coral' : 'h-full bg-editorial-blue'}
+                      className={cn(
+                        'bx-stage-progress-fill h-full',
+                        hasDelayed ? 'bg-coral' : 'bg-editorial-blue',
+                      )}
                       style={{ width: `${avgProgress ?? 0}%` }}
                     />
                   </div>

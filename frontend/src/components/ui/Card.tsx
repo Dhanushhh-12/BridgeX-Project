@@ -17,9 +17,9 @@ const VARIANT_CLASSES: Record<CardVariant, string> = {
 
 const PADDING_CLASSES = {
   none: '',
-  sm: 'p-4',
-  md: 'p-5 sm:p-6',
-  lg: 'p-6 sm:p-8',
+  sm: 'p-3.5 sm:p-4',
+  md: 'p-4 sm:p-6',
+  lg: 'p-5 sm:p-8',
 }
 
 export function Card({
@@ -32,7 +32,7 @@ export function Card({
   return (
     <section
       className={cn(
-        'rounded-sm border',
+        'min-w-0 rounded-sm border transition-[border-color,box-shadow] duration-150 hover:border-editorial-blue/30',
         VARIANT_CLASSES[variant],
         PADDING_CLASSES[padding],
         className,

@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Calendar, CheckCircle2, Info, RefreshCw, WifiOff } from 'lucide-react'
+import { useReducedMotion } from '../hooks/useReducedMotion'
+import { useGsapScrollSections } from '../lib/motion'
 import {
   ConstructionProgressChart,
   DelayPredictionSummary,
@@ -26,8 +28,19 @@ import {
   DEMO_PROJECTS,
   type DemoActivityRecord,
 } from '../data/demoOverviewData'
-import { getHealth, getSystemInfo, getWeather, postPredict } from '../services/apiClient'
-import type { HealthResponse, SystemInfoResponse, WeatherResponse } from '../types/api'
+import {
+  getHealth,
+  getPlatformAnalytics,
+  getSystemInfo,
+  getWeather,
+  postPredict,
+} from '../services/apiClient'
+import type {
+  HealthResponse,
+  PlatformAnalyticsResponse,
+  SystemInfoResponse,
+  WeatherResponse,
+} from '../types/api'
 
 const DEFAULT_COORDS = { label: 'Hyderabad Site (Default)', latitude: 17.385, longitude: 78.4867 }
 
@@ -46,6 +59,10 @@ const STATUS_OPTIONS = [
 ]
 
 export function ExecutiveOverviewPage() {
+  const pageRef = useRef<HTMLDivElement | null>(null)
+  const reducedMotion = useReducedMotion()
+  useGsapScrollSections(pageRef, '.bx-scroll-section', reducedMotion)
+
   const [selectedProjectId, setSelectedProjectId] = useState<string>('all')
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
@@ -75,6 +92,8 @@ export function ExecutiveOverviewPage() {
     items: BenchmarkPredictionItem[]
     error: string | null
   }>({ status: 'loading', items: [], error: null })
+
+  const [analyticsData, setAnalyticsData] = useState<PlatformAnalyticsResponse | null>(null)
 
   const [lastRefreshed, setLastRefreshed] = useState<string>(() =>
     new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -133,6 +152,15 @@ export function ExecutiveOverviewPage() {
           })
         }
       })
+
+    getPlatformAnalytics()
+      .then((data) => {
+        if (!cancelled) setAnalyticsData(data)
+      })
+      .catch(() => {
+        if (!cancelled) setAnalyticsData(null)
+      })
+
     return () => {
       cancelled = true
     }
@@ -322,7 +350,7 @@ export function ExecutiveOverviewPage() {
     selectedProjectId !== 'all' || selectedPeriod !== 'all' || selectedStatus !== 'all'
 
   return (
-    <div className="space-y-6">
+    <div ref={pageRef} className="space-y-6">
       <PageHeader
         eyebrow="Executive Intelligence"
         title="Executive Overview"
@@ -450,7 +478,7 @@ export function ExecutiveOverviewPage() {
       />
 
       {/* Charts & Live Intelligence Grid */}
-      <div className="grid gap-6 xl:grid-cols-12">
+      <div className="bx-scroll-section grid gap-6 xl:grid-cols-12">
         <div className="xl:col-span-7">
           <ConstructionProgressChart projects={filteredProjects} />
         </div>
@@ -466,15 +494,18 @@ export function ExecutiveOverviewPage() {
       </div>
 
       {/* ML Delay Prediction Overview */}
-      <DelayPredictionSummary
-        status={mlState.status}
-        errorMessage={mlState.error}
-        items={mlState.items}
-        onRetry={handleRetryMl}
-      />
+      <div className="bx-scroll-section">
+        <DelayPredictionSummary
+          status={mlState.status}
+          errorMessage={mlState.error}
+          items={mlState.items}
+          onRetry={handleRetryMl}
+        />
+      </div>
 
       {/* Recent Project Activity Table */}
-      <Card>
+      <div className="bx-scroll-section">
+        <Card>
         <CardHeader>
           <div>
             <CardTitle>Recent Project Activity</CardTitle>
@@ -497,6 +528,85 @@ export function ExecutiveOverviewPage() {
           />
         </CardContent>
       </Card>
+      </div>
+
+      {/* Live SQLite Database Telemetry & Audit Feed */}
+      {analyticsData && (
+        <div className="bx-scroll-section">
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle>Live SQLite Platform Integration Summary</CardTitle>
+              <CardDescription>
+                Real database counts and audit trail fetched from <code>GET /api/v1/analytics</code>.
+              </CardDescription>
+            </div>
+            <Badge variant="info" showDot>
+              LIVE SQLITE DB
+            </Badge>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              <div className="rounded-sm border border-border-neutral bg-ivory/60 p-3">
+                <p className="bx-label">DB Projects</p>
+                <p className="mt-1 text-lg font-semibold text-editorial-blue bx-tabular">
+                  {analyticsData.database_counts.projects}
+                </p>
+              </div>
+              <div className="rounded-sm border border-border-neutral bg-ivory/60 p-3">
+                <p className="bx-label">DB Tasks</p>
+                <p className="mt-1 text-lg font-semibold text-editorial-blue bx-tabular">
+                  {analyticsData.database_counts.tasks}
+                </p>
+              </div>
+              <div className="rounded-sm border border-border-neutral bg-ivory/60 p-3">
+                <p className="bx-label">ML Runs Logged</p>
+                <p className="mt-1 text-lg font-semibold text-editorial-blue bx-tabular">
+                  {analyticsData.database_counts.ml_predictions_logged}
+                </p>
+              </div>
+              <div className="rounded-sm border border-border-neutral bg-ivory/60 p-3">
+                <p className="bx-label">Weather Queries</p>
+                <p className="mt-1 text-lg font-semibold text-editorial-blue bx-tabular">
+                  {analyticsData.database_counts.weather_forecasts_logged}
+                </p>
+              </div>
+              <div className="rounded-sm border border-border-neutral bg-ivory/60 p-3">
+                <p className="bx-label">CV Analyses</p>
+                <p className="mt-1 text-lg font-semibold text-editorial-blue bx-tabular">
+                  {analyticsData.database_counts.cv_analyses_logged}
+                </p>
+              </div>
+              <div className="rounded-sm border border-border-neutral bg-ivory/60 p-3">
+                <p className="bx-label">Reports Exported</p>
+                <p className="mt-1 text-lg font-semibold text-editorial-blue bx-tabular">
+                  {analyticsData.database_counts.reports_generated}
+                </p>
+              </div>
+            </div>
+
+            {analyticsData.recent_audit_logs.length > 0 && (
+              <div className="rounded-sm border border-border-neutral bg-ivory/35 p-3">
+                <p className="bx-label mb-2">Recent Backend Audit Events</p>
+                <ul className="space-y-1 text-xs text-charcoal/85">
+                  {analyticsData.recent_audit_logs.slice(0, 5).map((log) => (
+                    <li key={log.id} className="flex flex-wrap items-center justify-between gap-2">
+                      <span>
+                        <strong className="text-editorial-blue">{log.action}</strong> ({log.entity_type}{' '}
+                        <code>{log.entity_id}</code>) by {log.actor_username} [{log.actor_role}]
+                      </span>
+                      <span className="font-mono text-[11px] text-charcoal/65">
+                        {log.details}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        </div>
+      )}
     </div>
   )
 }

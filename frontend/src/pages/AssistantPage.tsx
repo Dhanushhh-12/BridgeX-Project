@@ -196,12 +196,12 @@ export function AssistantPage() {
 
       <div className="grid gap-6 xl:grid-cols-12">
         {/* Main Conversation Column */}
-        <Card padding="none" className="xl:col-span-8 flex min-h-[560px] flex-col">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-neutral bg-ivory/60 px-5 py-3.5">
-            <div className="flex items-center gap-2">
-              <Bot className="h-4 w-4 text-coral" aria-hidden="true" />
-              <span className="text-sm font-semibold text-editorial-blue">
-                Local Ollama Inference (via FastAPI <code>POST /ai/chat</code>)
+        <Card padding="none" className="flex min-h-[420px] flex-col sm:min-h-[520px] xl:col-span-8 xl:min-h-[560px]">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-neutral bg-ivory/60 px-4 py-3 sm:px-5 sm:py-3.5">
+            <div className="flex min-w-0 items-center gap-2">
+              <Bot className="h-4 w-4 shrink-0 text-coral" aria-hidden="true" />
+              <span className="truncate text-xs font-semibold text-editorial-blue sm:text-sm">
+                Local Ollama Inference (<code>POST /ai/chat</code>)
               </span>
             </div>
             <Badge variant="neutral">Session-Only Thread</Badge>
@@ -212,7 +212,7 @@ export function AssistantPage() {
             role="log"
             aria-label="Assistant conversation history"
             aria-live="polite"
-            className="flex-1 space-y-4 overflow-y-auto bg-ivory/35 p-5 max-h-[480px]"
+            className="flex-1 max-h-[52dvh] space-y-4 overflow-y-auto bg-ivory/35 p-3.5 sm:max-h-[480px] sm:p-5"
           >
             {messages.length === 0 ? (
               <div className="space-y-5 py-4">
@@ -320,6 +320,7 @@ export function AssistantPage() {
                 isLoading={isSending}
                 disabled={isSending}
                 leftIcon={<Send className="h-3.5 w-3.5" />}
+                className="w-full sm:w-auto"
               >
                 Send Message
               </Button>

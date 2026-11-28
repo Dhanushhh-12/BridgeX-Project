@@ -2,15 +2,19 @@ import type { LucideIcon } from 'lucide-react'
 import {
   BarChart3,
   Bot,
+  Box,
   Camera,
   Clock,
   CloudRain,
   FileText,
   FolderKanban,
   LayoutDashboard,
+  MapPin,
   Settings,
+  Shield,
   TrendingUp,
 } from 'lucide-react'
+import type { UserRole } from '../types/api'
 
 export interface NavItemConfig {
   id: string
@@ -21,6 +25,7 @@ export interface NavItemConfig {
   subtitle: string
   backendBinding: string
   plannedStep: string
+  allowedRoles?: UserRole[]
 }
 
 export const NAV_ITEMS: NavItemConfig[] = [
@@ -42,7 +47,27 @@ export const NAV_ITEMS: NavItemConfig[] = [
     sectionGroup: 'Core Workspace',
     subtitle: 'Infrastructure corridor registry, contractor allocation, and site coordinates.',
     backendBinding: 'Project management API & database layer (planned in upcoming backend steps)',
-    plannedStep: 'Step 14.9',
+    plannedStep: 'Step 14.6',
+  },
+  {
+    id: 'maps',
+    label: 'Project Maps',
+    path: '/maps',
+    icon: MapPin,
+    sectionGroup: 'Core Workspace',
+    subtitle: 'Interactive OpenStreetMap geographic explorer with live site weather and ML probes.',
+    backendBinding: 'Leaflet / OpenStreetMap + GET /weather & POST /predict',
+    plannedStep: 'Step 14.13',
+  },
+  {
+    id: 'twin-3d',
+    label: '3D Digital Twin',
+    path: '/3d-twin',
+    icon: Box,
+    sectionGroup: 'Core Workspace',
+    subtitle: 'Interactive Three.js bridge structural twin and corridor coordinate globe.',
+    backendBinding: 'Three.js / R3F + GET /api/v1/projects & GET /weather',
+    plannedStep: 'Step 14.19',
   },
   {
     id: 'progress',
@@ -115,14 +140,25 @@ export const NAV_ITEMS: NavItemConfig[] = [
     plannedStep: 'Step 14.14',
   },
   {
+    id: 'users',
+    label: 'User Management',
+    path: '/users',
+    icon: Shield,
+    sectionGroup: 'Governance',
+    subtitle: 'Administrator-only provisioning, project assignments, and role enforcement.',
+    backendBinding: 'GET/POST/PATCH/DELETE /api/v1/users (Administrator only)',
+    plannedStep: 'Step 14.15',
+    allowedRoles: ['administrator'],
+  },
+  {
     id: 'settings',
     label: 'Settings',
     path: '/settings',
     icon: Settings,
     sectionGroup: 'Governance',
-    subtitle: 'Workspace preferences, reduced-motion toggles, and local backend status.',
-    backendBinding: 'GET /system-info & authentication/profile settings',
-    plannedStep: 'Step 14.7',
+    subtitle: 'Authenticated user profile, active role permissions, and session controls.',
+    backendBinding: 'GET /api/v1/auth/me & GET /system-info',
+    plannedStep: 'Step 14.15',
   },
 ]
 

@@ -17,6 +17,7 @@ import {
   ProgressSummaryGrid,
   TaskTimelineCard,
 } from '../components/progress'
+import { BackendTasksPanel } from '../components/progress/BackendTasksPanel'
 import {
   Badge,
   Button,
@@ -612,19 +613,8 @@ export function ConstructionProgressPage() {
         </CardFooter>
       </Card>
 
-      {/* Missing Backend Endpoints Report */}
-      <Card variant="ivory" padding="sm">
-        <div className="flex items-start gap-2.5 text-xs text-charcoal">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-coral" aria-hidden="true" />
-          <p>
-            <strong className="text-editorial-blue">Missing Backend Functionality:</strong>{' '}
-            Serving the 6,000 rows from <code>construction_tasks.csv</code> plus real project-task
-            assignments, task start/finish dates, and historical progress snapshots requires adding{' '}
-            <code>GET /api/v1/tasks</code> and <code>GET /api/v1/progress/history</code> backed by
-            SQLite/PostgreSQL.
-          </p>
-        </div>
-      </Card>
+      {/* Live SQLite Backend Tasks Panel */}
+      <BackendTasksPanel />
 
       {/* Live POST /predict Verification Modal */}
       <Modal

@@ -1,4 +1,5 @@
 import { useId, useState, type ReactNode } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { cn } from '../../lib/cn'
 
 export interface TooltipProps {
@@ -41,20 +42,27 @@ export function Tooltip({
         {children}
       </span>
 
-      {visible && (
-        <span
-          id={tooltipId}
-          role="tooltip"
-          style={{ boxShadow: 'var(--bx-shadow-subtle)' }}
-          className={cn(
-            'pointer-events-none absolute z-50 w-max max-w-[240px]',
-            'rounded-xs border border-editorial-blue bg-editorial-blue px-2.5 py-1.5 text-xs font-medium text-surface',
-            PLACEMENT_CLASSES[placement],
-          )}
-        >
-          {content}
-        </span>
-      )}
+      <AnimatePresence>
+        {visible && (
+          <motion.span
+            key="tooltip-bubble"
+            id={tooltipId}
+            role="tooltip"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.12 }}
+            style={{ boxShadow: 'var(--bx-shadow-subtle)' }}
+            className={cn(
+              'pointer-events-none absolute z-50 w-max max-w-[240px]',
+              'rounded-xs border border-editorial-blue bg-editorial-blue px-2.5 py-1.5 text-xs font-medium text-surface',
+              PLACEMENT_CLASSES[placement],
+            )}
+          >
+            {content}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </span>
   )
 }
