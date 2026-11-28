@@ -1,0 +1,39 @@
+# AI Bridge X – Project Dependencies
+# Verified against Python 3.11.9
+
+# Backend Web Framework & Validation
+fastapi==0.165.0
+uvicorn[standard]==0.54.0
+pydantic==2.14.4
+python-multipart==0.0.34
+
+# Weather & HTTP Client
+requests==2.34.2
+
+# Machine Learning, Data & Explainability
+joblib==1.6.0
+xgboost==3.2.0
+pandas==3.1.1
+numpy==2.4.6
+scikit-learn==1.9.1
+matplotlib==3.11.2
+shap==0.51.0
+
+# Computer Vision & Pretrained SegFormer
+pillow==13.0.0
+torch>=2.15.0  # Verified installed: 2.15.0+cpu
+transformers==5.24.1
+
+# Automated Backend Testing
+pytest==9.2.0
+httpx==0.29.0
+
+# Free Local LLM Client (Ollama)
+ollama==0.6.3
+
+# Free PDF Report Generation
+reportlab==5.1.2
+
+# Authentication, JWT & Argon2id Password Hashing
+PyJWT==2.15.1
+argon2-cffi==25.1.0

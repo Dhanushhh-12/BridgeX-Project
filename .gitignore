@@ -1,0 +1,23 @@
+# Private secrets & environment files (NEVER upload API keys to GitHub)
+.env
+.env.*
+!.env.example
+
+# Python caches & testing artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# Large local model weights (keep out of GitHub)
+*.gguf
+*.bin
+ollama_models/
+
+# Local SQLite database and runtime dev JWT signing key
+data/*.db
+data/*.db-*
+data/.jwt_dev_secret

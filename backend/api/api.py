@@ -2,7 +2,8 @@
 AI Bridge X – FastAPI Backend Application
 Provides root (/), health (/health), system-info (/system-info),
 ML duration prediction (/predict), weather forecast (/weather),
-and computer vision endpoints (/analyze-image, /analyze-progress).
+computer vision endpoints (/analyze-image, /analyze-progress),
+and local Ollama AI chat (/ai/chat).
 """
 
 from datetime import datetime
@@ -24,15 +25,37 @@ if str(PROJECT_ROOT) not in sys.path:
 # 1. Import FastAPI, exception classes, Pillow, and Pydantic
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from PIL import Image, ImageOps, UnidentifiedImageError
 from pydantic import BaseModel, Field, ValidationError, field_validator
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-# 2. Reuse existing project config, ML prediction, and weather functions (no duplication)
+# 2. Reuse existing project config, ML prediction, weather, and local LLM service
 from config import CONTRACTORS, DATA_DIR, TARGET, TASK_TYPES
 from predict import load_trained_model, predict_duration
 from weather import count_rainy_days, get_rainfall_forecast
+from backend.db.database import check_database_health, ensure_database_initialized
+from backend.services.assistant_service import ask_assistant
+from backend.services.auth_service import ensure_env_admin_if_configured
+from backend.services.platform_db_service import (
+    record_cv_analysis,
+    record_ml_prediction,
+    record_weather_observation,
+)
+from backend.api.routes.analytics import router as analytics_router
+from backend.api.routes.auth import router as auth_router
+from backend.api.routes.projects import router as projects_router
+from backend.api.routes.reports import router as reports_router
+from backend.api.routes.users import router as users_router
+from backend.services.llm_service import (
+    EmptyChatInputError,
+    LLMServiceError,
+    LocalLLMModelNotFoundError,
+    LocalLLMTimeoutError,
+    LocalLLMUnavailableError,
+    MAX_CHAT_MESSAGE_LENGTH,
+)
 
 # Configure server-side logger (records debug details/tracebacks privately on server)
 logger = logging.getLogger("bridgeX.api")
@@ -48,6 +71,48 @@ app = FastAPI(
     description="Backend API for AI Bridge X – Intelligent Infrastructure Progress & Delay Prediction Platform.",
     version="1.0.0",
 )
+
+# Configure explicit CORS origins for the React frontend (never wildcard '*' in auth setups)
+_cors_origins_raw = os.getenv(
+    "BRIDGEX_CORS_ORIGINS",
+    "http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:4173,http://localhost:4173",
+)
+ALLOWED_CORS_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in _cors_origins_raw.split(",")
+    if origin.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_CORS_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
+)
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Attach defensive security headers and prevent caching of auth endpoints."""
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+    if request.url.path.startswith("/api/v1/auth"):
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["Pragma"] = "no-cache"
+    return response
+
+# Initialize SQLite auth/project tables safely at startup
+ensure_database_initialized()
+ensure_env_admin_if_configured()
+
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(projects_router)
+app.include_router(analytics_router)
+app.include_router(reports_router)
 
 
 def _http_error_label(status_code: int) -> str:
@@ -234,11 +299,13 @@ def read_root():
 # 7. Health check endpoint: GET /health
 @app.get("/health")
 def health_check():
-    """Return the health status, application name, and API version."""
+    """Return the health status, application name, API version, and safe DB status."""
+    db_ok = check_database_health()
     return {
-        "status": "healthy",
+        "status": "healthy" if db_ok else "degraded",
         "application": app.title,
         "version": app.version,
+        "database": "connected" if db_ok else "unavailable",
     }
 
 
@@ -284,6 +351,17 @@ def predict_task_duration(request: PredictionRequest):
             status_code=500,
             detail="Failed to generate prediction with the ML model.",
         ) from exc
+
+    record_ml_prediction(
+        task_type=request.task_type,
+        contractor=request.contractor,
+        planned_duration=request.planned_duration,
+        crew_size=request.crew_size,
+        material_cost=request.material_cost,
+        weather_risk=request.weather_risk,
+        complexity_level=request.complexity_level,
+        predicted_duration_days=predicted_days,
+    )
 
     return {
         "status": "success",
@@ -347,15 +425,26 @@ def get_weather(
             detail="An unexpected error occurred while retrieving weather data.",
         ) from exc
 
+    total_rain = round(sum(rainfall_amounts), 2)
+    record_weather_observation(
+        latitude=latitude,
+        longitude=longitude,
+        forecast_days=len(dates),
+        threshold_mm=threshold_mm,
+        rainy_days_count=rainy_days,
+        total_rainfall_mm=total_rain,
+    )
+
     return {
         "status": "success",
         "source": "Open-Meteo",
+        "record_kind": "forecast",
         "latitude": latitude,
         "longitude": longitude,
         "forecast_days": len(dates),
         "rain_threshold_mm": threshold_mm,
         "rainy_days_count": rainy_days,
-        "total_rainfall_mm": round(sum(rainfall_amounts), 2),
+        "total_rainfall_mm": total_rain,
         "units": "mm",
         "daily_forecast": [
             {
@@ -371,6 +460,7 @@ def get_weather(
 # 11. Computer Vision upload & segmentation settings and helpers
 UPLOAD_DIR = os.path.join(DATA_DIR, "images", "uploads")
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB maximum upload size
+MAX_IMAGE_PIXELS_TOTAL = 40_000_000  # 40 MP decompression-bomb guard
 MAX_ANALYSIS_DIMENSION = 1024        # Matches prepare_images.py for safe CPU inference
 ALLOWED_IMAGE_FORMATS = {
     "JPEG": ".jpg",
@@ -465,8 +555,16 @@ def _validate_and_load_uploaded_image(file_bytes: bytes) -> tuple[Image.Image, s
     try:
         with Image.open(io.BytesIO(file_bytes)) as check_img:
             actual_format = (check_img.format or "").upper()
+            width, height = check_img.size
+            if width * height > MAX_IMAGE_PIXELS_TOTAL:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Image dimensions exceed the maximum allowed pixel limit (40 MP).",
+                )
             check_img.verify()
-    except (UnidentifiedImageError, OSError, SyntaxError) as exc:
+    except HTTPException:
+        raise
+    except (UnidentifiedImageError, OSError, SyntaxError, Image.DecompressionBombError) as exc:
         raise HTTPException(
             status_code=400,
             detail="Invalid or corrupted image file. Please upload a valid JPEG or PNG image.",
@@ -620,6 +718,17 @@ async def analyze_image(
             detail="An unexpected error occurred during image analysis.",
         ) from exc
 
+    record_cv_analysis(
+        result_id=result_id,
+        analysis_kind="single",
+        project_code=metadata.project_id,
+        model_name=bundle["model_name"],
+        image_diff_score_pct=None,
+        semantic_change_pct=None,
+        detected_classes_count=len(report_rows),
+        mask_path=f"data/images/segmented/{safe_mask_name}",
+    )
+
     return {
         "upload_status": "success",
         "result_id": result_id,
@@ -756,6 +865,18 @@ async def analyze_progress(
             detail="An unexpected error occurred during progress analysis.",
         ) from exc
 
+    record_cv_analysis(
+        result_id=result_id,
+        analysis_kind="comparison",
+        project_code=metadata.project_id,
+        model_name=bundle["model_name"],
+        image_diff_score_pct=image_diff_score,
+        semantic_change_pct=semantic_changed_pct,
+        detected_classes_count=len(stats_rows),
+        csv_report_path=f"data/images/reports/{os.path.basename(csv_path)}",
+        html_report_path=f"data/images/reports/{os.path.basename(html_path)}",
+    )
+
     return {
         "analysis_status": "completed",
         "result_id": result_id,
@@ -799,3 +920,47 @@ async def analyze_progress(
             "can significantly increase visual difference scores."
         ),
     }
+
+
+# 14. Local Ollama AI Chat schemas & endpoint: POST /ai/chat
+class AIChatRequest(BaseModel):
+    """Validated input schema for asking the local AI Bridge X assistant."""
+
+    message: str = Field(
+        ...,
+        min_length=1,
+        max_length=MAX_CHAT_MESSAGE_LENGTH,
+        description=f"Question for the local Ollama AI assistant (1 to {MAX_CHAT_MESSAGE_LENGTH} characters).",
+        examples=["Explain the construction delay prediction system."],
+    )
+
+    @field_validator("message")
+    @classmethod
+    def validate_non_empty_message(cls, value: str) -> str:
+        """Trim surrounding whitespace and reject blank-only messages."""
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Message cannot be empty or whitespace only.")
+        return cleaned
+
+
+class AIChatResponse(BaseModel):
+    """Structured JSON response returned by POST /ai/chat."""
+
+    success: bool
+    response: str
+
+
+@app.post("/ai/chat", response_model=AIChatResponse)
+def ai_chat(request: AIChatRequest):
+    """Answer a question via the grounded AI Bridge X assistant service (local Ollama)."""
+    try:
+        result = ask_assistant(request.message)
+    except EmptyChatInputError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except (LocalLLMUnavailableError, LocalLLMModelNotFoundError, LocalLLMTimeoutError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except LLMServiceError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    return AIChatResponse(success=True, response=result["response"])
